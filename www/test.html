@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <meta charset="utf-8">
+  <title>Image downloading and comparing</title>
+ </head>
+<body>
+
+<div align="center">
+ <form method="post" enctype="multipart/form-data">
+  <table align="center" border="0" cellpadding="10" cellspacing="0" width="90%">
+   <tr>
+    <td width="50%">
+     Рисунок 1 (до 600x600): <input type="file" id="file1">
+    </td>
+    <td width="50%">
+     Рисунок 2 (до 600x600): <input type="file" id="file2">
+    </td>
+   </tr>
+   <tr>
+    <td width="50%" align="center">
+     <canvas id="imgCanvas1" width="600" height="600" style="background-color: #999999;">
+      Извините, канва недоступна в вашем бруазере
+     </canvas>
+    </td>
+    <td width="50%" align="center">
+     <canvas id="imgCanvas2" width="600" height="600" style="background-color: #999999;">
+      Извините, канва недоступна в вашем бруазере
+     </canvas>
+    </td>
+   </tr>
+   <tr>
+    <td colspan="2" align="center">
+     <div id="imgResult"></div>
+    </td>
+   </tr>
+   </table>
+ </form>
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+ <script type="text/javascript">
+ var numColsToCut = 30;
+ var numRowsToCut = 30;
+ var widthOfOnePiece = 100;
+ var heightOfOnePiece = 100;
+var image = new Image();
+image.onload = cutImageUp;
+image.src = 'img/1.jpg';
+
+function cutImageUp() {
+    var imagePieces = [];
+    for(var x = 0; x < numColsToCut; ++x) {
+        for(var y = 0; y < numRowsToCut; ++y) {
+            var canvas = document.createElement('canvas');
+            canvas.width = widthOfOnePiece;
+            canvas.height = heightOfOnePiece;
+            var context = canvas.getContext('2d');
+            context.drawImage(image, x * widthOfOnePiece, y * heightOfOnePiece, widthOfOnePiece, heightOfOnePiece, 0, 0, canvas.width, canvas.height);
+            imagePieces.push(canvas.toDataURL());
+        }
+    }
+
+    // imagePieces now contains data urls of all the pieces of the image
+
+    // load one piece onto the page
+    var anImageElement = document.getElementById('imgCanvas1');
+    anImageElement.src = imagePieces[0];
+}
+ </script>
+ <noscript><div>Извините, требуется включённый Javascript для работы приложения!</div></noscript>
+</div>
+
+</body></html>
