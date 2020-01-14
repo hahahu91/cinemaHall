@@ -1,48 +1,73 @@
 
+
 import {hall2 as hall} from './halls.js';
-var img1, img2;
-var ctx1, ctx2;
-var loaded1 = false, loaded2 = false;
-var img1_width, img2_width, img1_height, img2_height;
+function draw(img) {
+  var canvas = document.getElementById('imgCanvas1');
+  var ctx = canvas.getContext('2d');
+  //ctx.drawImage(img, 0, 0);
+  img.style.display = 'none';
+  var zoomctx = document.getElementById('imgCanvas2').getContext('2d');
+ 
+  var train_data = [];
+  let vector = [];
+  let net = null;
+
+  for (let i = 0; i < hall.length; i++) {     
+    let w = hall[i].w;
+    let h = hall[i].h; 
+    let x = hall[i].x - w/2;
+    let y = hall[i].y - h/2;
+
+    zoomctx.drawImage(canvas,
+      x,
+      y,
+      w, h,
+      0, 0,
+      30, 40);
+      
+    vector = zoomctx.getImageData(x, y, w, h).data;
+    ctx.strokeStyle = 'red';
+    ctx.strokeRect(x, y, w, h);
+
+    if( confirm('Empty?') )
+    {
+      train_data.push({
+        input: vector,
+        output: {Empty: 1}
+      });
+    } else
+    {
+      train_data.push({
+        input: vector,
+        output: {NotEmpty: 1}
+      });
+    }
+};
+    console.log(train_data);
+    net = new brain.NeuralNetwork();
+				net.train(train_data, {log: true});
+
+				const result = brain.likely(vector, net);
+				alert(result);
+  //}
+  //canvas.addEventListener('mousemove', zoom);
+}
+
+var img, img2;
+var ctx, ctx2;
+var loaded1 = false;
+var img_width, img_height;
 function compareImages () { //Сравнить рисунки img1 и img2
  var result = document.getElementById('imgResult');
  var string = '';
 
- if (loaded1==false || loaded2==false) {
-  string = 'Не загружены 2 файла';
- }
- else if (img1_width != img2_width || img1_height != img2_height) {
-  string = 'Для сравнения размеры рисунков должны совпадать<br>Загружено: ('+
-   img1_width + 'x' + img1_height + ') и ('+
-   img2_width + 'x' + img2_height + ')';
+ if (loaded1==false) {
+  string = 'Не загружен файл';
  }
  else {
-  checkPlace()
+  //checkPlace()
  } 
- result.innerHTML = string;
-}
-function checkPlace(){
-  for (let j = 0; j < hall.length; j++) {     
-      let w = hall[j].w;
-      let h = hall[j].h; 
-      let x = hall[j].x - w/2;
-      let y = hall[j].y - h/2;
-      var img1data = ctx1.getImageData(x, y, w, h).data;
-      var img2data = ctx2.getImageData(x, y, w, h).data;
-      var diff = compareImgPlace(img1data, img2data);
 
-      var r = 100*diff/(w * h * 3);
-      var string = "Разница между рисунками: " + r.toFixed(5)+'%';
-      if (r  > 10) {
-          console.log(hall[j], j, r,diff)
-        ctx2.strokeStyle = 'red';
-        ctx2.strokeRect(x, y, w, h);
-        ctx1.strokeStyle = 'red';
-        ctx1.strokeRect(x, y, w, h);
-      }
-  }
-  //console.log(hall);
-  //loaded1 = loaded2 = false;
 }
 function compareImgPlace(img1data, img2data) {
   let diff = 0;
@@ -81,38 +106,21 @@ function resizeImage (img) { //Изменить размеры рисунка im
 $("#file1").change (function (e) {
  var URL = window.webkitURL || window.URL;
  var url = URL.createObjectURL(e.target.files[0]);
- img1 = new Image();
- var canvas1 = document.getElementById('imgCanvas1');
- img1.src = url;
- img1.onload = function() {
-  img1_width = img1.width;
-  img1_height = img1.height;
-  var resizeResults = resizeImage (img1); 
-  img1_width = resizeResults[0]; img1_height = resizeResults[1];
-  ctx1 = canvas1.getContext('2d');
-  ctx1.fillStyle="#999999"; 
-  ctx1.fillRect(0, 0, canvas1.width, canvas1.height);
-  ctx1.drawImage (img1, 0, 0, img1_width, img1_height);
+ img = new Image();
+ var canvas = document.getElementById('imgCanvas1');
+ img.src = url;
+ img.onload = function() {
+  //img_width = img.width;
+  //img_height = img.height;
+  var resizeResults = resizeImage(img); 
+  img_width = resizeResults[0]; img_height = resizeResults[1];
+  ctx = canvas.getContext('2d');
+  ctx.fillStyle="#999999"; 
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage (img, 0, 0, img_width, img_height);
   loaded1 = true;
-  compareImages();
- }
-});
-$("#file2").change (function (e) {
- var URL = window.webkitURL || window.URL;
- var url = URL.createObjectURL(e.target.files[0]);
- img2 = new Image();
- var canvas2 = document.getElementById('imgCanvas2');
- img2.src = url;
- img2.onload = function() {
-  img2_width = img2.width;
-  img2_height = img2.height;
-  var resizeResults = resizeImage (img2); 
-  img2_width = resizeResults[0]; img2_height = resizeResults[1];
-  ctx2 = canvas2.getContext('2d');
-  ctx2.fillStyle="#999999"; 
-  ctx2.fillRect(0, 0, canvas2.width, canvas2.height);
-  ctx2.drawImage (img2, 0, 0, img2_width, img2_height);
-  loaded2 = true;
-  compareImages();
+  draw(this);
+
+ // compareImages();
  }
 });
