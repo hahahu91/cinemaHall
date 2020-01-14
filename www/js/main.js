@@ -1,6 +1,7 @@
 
 
 import {hall2 as hall} from './halls.js';
+import {hall2_68 as hallCheck} from './halls.js';
 function draw(img) {
   var canvas = document.getElementById('imgCanvas1');
   var ctx = canvas.getContext('2d');
@@ -10,7 +11,7 @@ function draw(img) {
  
   var train_data = [];
   let vector = [];
-  let net = null;
+  var net = null;
 
   for (let i = 0; i < hall.length; i++) {     
     let w = hall[i].w;
@@ -23,12 +24,15 @@ function draw(img) {
       y,
       w, h,
       0, 0,
-      30, 40);
-      
-    vector = zoomctx.getImageData(x, y, w, h).data;
+      20, 25);
+      let imageData = zoomctx.getImageData(0, 0, 20, 25);
+      //console.log(imageData);
+//console.log(zoomctx.getImageData(x, y, w, h).data);
+    
+    vector = preparation(imageData.data);
     ctx.strokeStyle = 'red';
     ctx.strokeRect(x, y, w, h);
-
+    console.log(vector);
     if( confirm('Empty?') )
     {
       train_data.push({
@@ -39,17 +43,26 @@ function draw(img) {
     {
       train_data.push({
         input: vector,
-        output: {NotEmpty: 1}
+        output: {notEmpty: 1}
       });
-    }
-};
-    console.log(train_data);
-    net = new brain.NeuralNetwork();
-				net.train(train_data, {log: true});
+    } 
+  };
+  console.log(train_data);
+  net = new brain.NeuralNetwork();
+  net.train(train_data, { 
+    iterations: 20000, // the maximum times to iterate the training data --> number greater than 0
+    errorThresh: 0.005, // the acceptable error percentage from training data --> number between 0 and 1
+    log: true, // true to use console.log, when a function is supplied it is used --> Either true or a function
+    logPeriod: 10, // iterations between logging out --> number greater than 0
+    learningRate: 0.3, // scales with delta to effect training rate --> number between 0 and 1
+    momentum: 0.1, // scales with next layer's change value --> number between 0 and 1
+    callback: null, // a periodic call back that can be triggered while training --> null or function
+    callbackPeriod: 10, // the number of iterations through the training data between callback calls --> number greater than 0
+    timeout: Infinity,  });
 
-				const result = brain.likely(vector, net);
-				alert(result);
-  //}
+  checkOthersPlace(net);
+  //const result = brain.likely(vector, net);
+  //alert(result);
   //canvas.addEventListener('mousemove', zoom);
 }
 
@@ -69,6 +82,38 @@ function compareImages () { //Сравнить рисунки img1 и img2
  } 
 
 }
+function checkOthersPlace(net) {
+  var canvas = document.getElementById('imgCanvas1');
+  var ctx = canvas.getContext('2d');
+  //ctx.drawImage(img, 0, 0);
+  var zoomctx = document.getElementById('imgCanvas2').getContext('2d');
+  let vector = [];
+
+  for (let i = 0; i < hallCheck.length; i++) {     
+    let w = hallCheck[i].w;
+    let h = hallCheck[i].h; 
+    let x = hallCheck[i].x - w/2;
+    let y = hallCheck[i].y - h/2;
+
+    zoomctx.drawImage(canvas,
+      x,
+      y,
+      w, h,
+      0, 0,
+      6, 8);
+      let imageData = zoomctx.getImageData(0, 0, 30, 40);
+      //console.log(imageData);
+//console.log(zoomctx.getImageData(x, y, w, h).data);
+    
+    vector = preparation(imageData.data);
+    const result = brain.likely(vector, net);
+    ctx.strokeStyle = 'red';
+    ctx.strokeRect(x, y, w, h);
+
+  
+    console.log(result);
+  }
+}
 function compareImgPlace(img1data, img2data) {
   let diff = 0;
   let sum = 0
@@ -80,6 +125,15 @@ function compareImgPlace(img1data, img2data) {
         sum = 0;
       }
   return diff;
+}
+function preparation(imgData) {
+  let vector = [];
+  for (var i = 0; i < imgData.length / 4; i++) {
+    var avg = (imgData[i] + imgData[i + 1] + imgData[i + 2]) / 3;
+        ;
+        vector.push(avg / 255);
+      }
+  return vector;
 }
 
 function resizeImage (img) { //Изменить размеры рисунка img
