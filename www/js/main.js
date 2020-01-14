@@ -1,5 +1,5 @@
 
-
+import {TrainingHall2 as trainingData } from './hall2.js';
 import {hall2 as hall} from './halls.js';
 import {hall2_68 as hallCheck} from './halls.js';
 function draw(img) {
@@ -33,7 +33,7 @@ function draw(img) {
     ctx.strokeStyle = 'red';
     ctx.strokeRect(x, y, w, h);
     console.log(vector);
-    if( confirm('Empty?') )
+    /*if( confirm('Empty?') )
     {
       train_data.push({
         input: vector,
@@ -45,11 +45,12 @@ function draw(img) {
         input: vector,
         output: {notEmpty: 1}
       });
-    } 
+    } */
   };
-  console.log(train_data);
+  //var str = JSON.stringify(train_data)
+  //console.log(str);
   net = new brain.NeuralNetwork();
-  net.train(train_data, { 
+  net.train(JSON.parse(trainingData), { 
     iterations: 20000, // the maximum times to iterate the training data --> number greater than 0
     errorThresh: 0.005, // the acceptable error percentage from training data --> number between 0 and 1
     log: true, // true to use console.log, when a function is supplied it is used --> Either true or a function
